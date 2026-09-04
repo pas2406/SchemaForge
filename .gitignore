@@ -1,0 +1,21 @@
+# === Secrets : NE JAMAIS commiter ===
+# .env contient la clé API du LLM. Le committer = fuite de secret.
+.env
+
+# === Environnement virtuel Python ===
+# Des milliers de fichiers, reconstructibles depuis requirements.txt.
+.venv/
+venv/
+
+# === Caches et fichiers générés par Python ===
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# === Confort éditeur / OS (bruit, propre à chaque machine) ===
+.vscode/
+.idea/
+.DS_Store
+
+# === Journal d'apprentissage personnel (local, non versionné) ===
+docs/LEARNING.md
