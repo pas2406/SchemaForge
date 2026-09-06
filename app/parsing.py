@@ -21,6 +21,7 @@ class Table:
     # default_factory=list : chaque Table démarre avec sa PROPRE liste vide.
     # (Écrire "= []" partagerait une seule liste entre toutes les tables : piège Python classique.)
     columns: list[Column] = field(default_factory=list)
+    has_primary_key: bool = False  # la table a-t-elle une clé primaire (col. OU table) ?
 
 
 def parse_ddl(ddl: str) -> list[Table]:
@@ -52,7 +53,15 @@ def parse_ddl(ddl: str) -> list[Table]:
             for col in statement.find_all(exp.ColumnDef)
         ]
 
-        # On range la table complète (nom + colonnes) dans notre liste de résultats.
-        tables.append(Table(name=table_name, columns=columns))
+        # Une PK peut être déclarée sur une colonne (PRIMARY KEY après le type)
+        # OU au niveau de la table (PRIMARY KEY (...)). On accepte les deux formes.
+        has_pk = any(statement.find_all(exp.PrimaryKeyColumnConstraint)) or any(
+            statement.find_all(exp.PrimaryKey)
+        )
+
+        # On range la table complète (nom + colonnes + PK) dans notre liste de résultats.
+        tables.append(
+            Table(name=table_name, columns=columns, has_primary_key=has_pk)
+        )
 
     return tables

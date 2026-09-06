@@ -41,3 +41,21 @@ def test_parse_ignore_ce_qui_nest_pas_une_table():
 
     assert len(tables) == 1
     assert tables[0].name == "users"
+
+
+def test_detecte_pk_niveau_colonne():
+    # PRIMARY KEY déclarée sur la colonne.
+    tables = parse_ddl("CREATE TABLE users (id INT PRIMARY KEY, email TEXT);")
+    assert tables[0].has_primary_key is True
+
+
+def test_detecte_pk_niveau_table():
+    # PRIMARY KEY déclarée au niveau de la table.
+    tables = parse_ddl("CREATE TABLE users (id INT, email TEXT, PRIMARY KEY (id));")
+    assert tables[0].has_primary_key is True
+
+
+def test_detecte_absence_de_pk():
+    # Aucune PK : has_primary_key doit être False.
+    tables = parse_ddl("CREATE TABLE logs (message TEXT);")
+    assert tables[0].has_primary_key is False
