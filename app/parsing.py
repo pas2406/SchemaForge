@@ -2,6 +2,7 @@
 
 On s'appuie sur sqlglot (AST) plutôt que sur des recherches de texte : plus fiable.
 """
+# Le module dataclass sert à facilement créer des classes qui ont principalement pour rôle de stocker des données.
 
 from dataclasses import dataclass, field
 
@@ -19,7 +20,7 @@ class Column:
 class Table:
     name: str
     # default_factory=list : chaque Table démarre avec sa PROPRE liste vide.
-    # (Écrire "= []" partagerait une seule liste entre toutes les tables : piège Python classique.)
+    # (Écrire "= []" partagerait une seule liste entre toutes les tables, d'où l'utilisation de field pour donner une valeur par défaut à l'attribut.)
     columns: list[Column] = field(default_factory=list)
     has_primary_key: bool = False  # la table a-t-elle une clé primaire (col. OU table) ?
 
