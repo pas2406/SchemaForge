@@ -31,3 +31,26 @@ def detecter_pk_manquante(tables: list[Table]) -> list[Issue]:
             )
 
     return issues
+
+
+def detecter_fk_manquante(tables: list[Table]) -> list[Issue]:
+    """Signale les colonnes suivant la convention *_id sans clé étrangère déclarée."""
+    issues: list[Issue] = []
+
+    for table in tables:
+        for col in table.columns:
+            # Convention : un nom en "_id" désigne presque toujours une référence
+            # vers une autre table. Sans FK déclarée, le lien n'est pas protégé.
+            if col.name.endswith("_id") and not col.is_foreign_key:
+                issues.append(
+                    Issue(
+                        rule="fk_manquante",
+                        table=table.name,
+                        message=(
+                            f"La colonne « {table.name}.{col.name} » suit la convention "
+                            "*_id mais aucune clé étrangère n'est déclarée."
+                        ),
+                    )
+                )
+
+    return issues
