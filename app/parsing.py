@@ -14,6 +14,7 @@ from sqlglot import exp
 class Column:
     name: str
     type: str  # type SQL normalisé, ex. "INT", "TEXT"
+    is_foreign_key: bool = False  # une FK est-elle déjà déclarée pour cette colonne ?
 
 
 @dataclass
@@ -44,15 +45,29 @@ def parse_ddl(ddl: str) -> list[Table]:
         #   Create -> .this (le Schema) -> .this (la Table) -> .name (le texte "users")
         table_name = statement.this.this.name
 
+        # Colonnes couvertes par une FK déclarée AU NIVEAU TABLE (FOREIGN KEY (...)).
+        # ForeignKey.expressions liste les identifiants de colonnes concernés.
+        fk_niveau_table = {
+            ident.name
+            for fk in statement.find_all(exp.ForeignKey)
+            for ident in fk.expressions
+        }
+
         # Récupérer toutes les colonnes de CETTE table.
         # find_all(exp.ColumnDef) parcourt l'arbre et renvoie chaque définition de colonne.
-        columns = [
-            Column(
-                name=col.name,               # nom de la colonne, ex. "email"
-                type=col.args["kind"].sql(), # son type ; .sql() le reconvertit en texte, ex. "TEXT"
+        columns = []
+        for col in statement.find_all(exp.ColumnDef):
+            # Une FK existe pour cette colonne si :
+            #   - elle est listée dans une FK de niveau table, OU
+            #   - elle porte un REFERENCES au niveau colonne (noeud Reference).
+            a_une_fk = col.name in fk_niveau_table or any(col.find_all(exp.Reference))
+            columns.append(
+                Column(
+                    name=col.name,               # nom de la colonne, ex. "email"
+                    type=col.args["kind"].sql(), # son type ; .sql() le reconvertit en texte
+                    is_foreign_key=a_une_fk,
+                )
             )
-            for col in statement.find_all(exp.ColumnDef)
-        ]
 
         # Une PK peut être déclarée sur une colonne (PRIMARY KEY après le type)
         # OU au niveau de la table (PRIMARY KEY (...)). On accepte les deux formes.

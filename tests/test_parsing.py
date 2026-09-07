@@ -59,3 +59,31 @@ def test_detecte_absence_de_pk():
     # Aucune PK : has_primary_key doit être False.
     tables = parse_ddl("CREATE TABLE logs (message TEXT);")
     assert tables[0].has_primary_key is False
+
+
+def _colonne(table, nom):
+    """Petit utilitaire : retrouve une colonne par son nom."""
+    return next(c for c in table.columns if c.name == nom)
+
+
+def test_detecte_fk_niveau_colonne():
+    # FK déclarée sur la colonne (REFERENCES).
+    tables = parse_ddl(
+        "CREATE TABLE orders (id INT, user_id INT REFERENCES users(id));"
+    )
+    assert _colonne(tables[0], "user_id").is_foreign_key is True
+    assert _colonne(tables[0], "id").is_foreign_key is False
+
+
+def test_detecte_fk_niveau_table():
+    # FK déclarée au niveau de la table.
+    tables = parse_ddl(
+        "CREATE TABLE orders (id INT, user_id INT, FOREIGN KEY (user_id) REFERENCES users(id));"
+    )
+    assert _colonne(tables[0], "user_id").is_foreign_key is True
+
+
+def test_colonne_sans_fk():
+    # user_id sans FK : is_foreign_key doit être False.
+    tables = parse_ddl("CREATE TABLE orders (id INT, user_id INT);")
+    assert _colonne(tables[0], "user_id").is_foreign_key is False
