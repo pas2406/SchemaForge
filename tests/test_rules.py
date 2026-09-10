@@ -2,6 +2,7 @@
 
 from app.parsing import parse_ddl
 from app.rules import (
+    detecter_colonnes_multivaluees,
     detecter_fk_manquante,
     detecter_pk_manquante,
     detecter_tables_sans_contrainte,
@@ -117,3 +118,20 @@ def test_aucune_alerte_si_table_a_une_fk():
         "CREATE TABLE logs (user_id INT REFERENCES users(id), message TEXT);"
     )
     assert detecter_tables_sans_contrainte(tables) == []
+
+
+def test_signale_colonne_de_type_tableau():
+    # tags TEXT[] est multi-valué -> violation 1NF signalée.
+    tables = parse_ddl("CREATE TABLE articles (id INT PRIMARY KEY, tags TEXT[]);")
+    issues = detecter_colonnes_multivaluees(tables)
+
+    assert len(issues) == 1
+    assert issues[0].rule == "colonne_multivaluee"
+    assert issues[0].table == "articles"
+    assert "tags" in issues[0].message
+
+
+def test_aucune_alerte_si_colonnes_scalaires():
+    # Que des types simples -> aucune alerte.
+    tables = parse_ddl("CREATE TABLE articles (id INT, titre TEXT, vues INT);")
+    assert detecter_colonnes_multivaluees(tables) == []

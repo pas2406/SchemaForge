@@ -57,6 +57,30 @@ def detecter_fk_manquante(tables: list[Table]) -> list[Issue]:
     return issues
 
 
+def detecter_colonnes_multivaluees(tables: list[Table]) -> list[Issue]:
+    """Signale les colonnes de type tableau (violation de la 1re forme normale)."""
+    issues: list[Issue] = []
+
+    for table in tables:
+        for col in table.columns:
+            # sqlglot rend un type tableau sous la forme "ARRAY<...>".
+            # Une case contenant plusieurs valeurs viole la 1NF.
+            if col.type.startswith("ARRAY"):
+                issues.append(
+                    Issue(
+                        rule="colonne_multivaluee",
+                        table=table.name,
+                        message=(
+                            f"La colonne « {table.name}.{col.name} » est de type "
+                            f"tableau ({col.type}) : elle stocke plusieurs valeurs, "
+                            "ce qui viole la 1re forme normale (1NF)."
+                        ),
+                    )
+                )
+
+    return issues
+
+
 def detecter_tables_sans_contrainte(tables: list[Table]) -> list[Issue]:
     """Signale les tables sans aucune contrainte (ni clé primaire, ni clé étrangère)."""
     issues: list[Issue] = []
