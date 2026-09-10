@@ -57,6 +57,27 @@ def detecter_fk_manquante(tables: list[Table]) -> list[Issue]:
     return issues
 
 
+def detecter_tables_sans_contrainte(tables: list[Table]) -> list[Issue]:
+    """Signale les tables sans aucune contrainte (ni clé primaire, ni clé étrangère)."""
+    issues: list[Issue] = []
+
+    for table in tables:
+        a_une_fk = any(col.is_foreign_key for col in table.columns)
+        if not table.has_primary_key and not a_une_fk:
+            issues.append(
+                Issue(
+                    rule="table_sans_contrainte",
+                    table=table.name,
+                    message=(
+                        f"La table « {table.name} » n'a aucune contrainte "
+                        "(ni clé primaire, ni clé étrangère)."
+                    ),
+                )
+            )
+
+    return issues
+
+
 def detecter_types_incoherents(tables: list[Table]) -> list[Issue]:
     """Signale les colonnes de même nom ayant des types différents selon les tables."""
     # Pour chaque nom de colonne, on mémorise son type table par table.

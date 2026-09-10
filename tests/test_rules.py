@@ -4,6 +4,7 @@ from app.parsing import parse_ddl
 from app.rules import (
     detecter_fk_manquante,
     detecter_pk_manquante,
+    detecter_tables_sans_contrainte,
     detecter_types_incoherents,
 )
 
@@ -92,3 +93,27 @@ def test_types_colonne_presente_dans_une_seule_table():
     CREATE TABLE orders (id INT);
     """
     assert detecter_types_incoherents(parse_ddl(ddl)) == []
+
+
+def test_signale_table_sans_pk_ni_fk():
+    # Table sans PK ni FK -> signalée.
+    tables = parse_ddl("CREATE TABLE logs (message TEXT, niveau TEXT);")
+    issues = detecter_tables_sans_contrainte(tables)
+
+    assert len(issues) == 1
+    assert issues[0].rule == "table_sans_contrainte"
+    assert issues[0].table == "logs"
+
+
+def test_aucune_alerte_si_table_a_une_pk():
+    # Table avec PK -> pas signalée.
+    tables = parse_ddl("CREATE TABLE users (id INT PRIMARY KEY, email TEXT);")
+    assert detecter_tables_sans_contrainte(tables) == []
+
+
+def test_aucune_alerte_si_table_a_une_fk():
+    # Table sans PK mais avec une FK -> pas signalée.
+    tables = parse_ddl(
+        "CREATE TABLE logs (user_id INT REFERENCES users(id), message TEXT);"
+    )
+    assert detecter_tables_sans_contrainte(tables) == []
