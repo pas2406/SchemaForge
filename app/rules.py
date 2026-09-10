@@ -4,6 +4,7 @@ Principe du projet : « le déterministe détecte, le LLM suggère, l'humain val
 Chaque règle prend les tables parsées et renvoie une liste d'Issue (problèmes trouvés).
 """
 
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -50,6 +51,39 @@ def detecter_fk_manquante(tables: list[Table]) -> list[Issue]:
                         message=(
                             f"La colonne « {table.name}.{col.name} » suit la convention "
                             "*_id mais aucune clé étrangère n'est déclarée."
+                        ),
+                    )
+                )
+
+    return issues
+
+
+def _radical(nom: str) -> str:
+    """Retire le/les chiffre(s) final(aux) d'un nom : 'telephone1' -> 'telephone'."""
+    return re.sub(r"\d+$", "", nom)
+
+
+def detecter_redondances(tables: list[Table]) -> list[Issue]:
+    """Signale les groupes de colonnes numérotées (ex. tel1, tel2) = redondance."""
+    issues: list[Issue] = []
+
+    for table in tables:
+        # On regroupe les colonnes par radical (nom sans chiffre final).
+        groupes: dict[str, list[str]] = defaultdict(list)
+        for col in table.columns:
+            groupes[_radical(col.name)].append(col.name)
+
+        for noms in groupes.values():
+            # Deux colonnes ou plus partageant le même radical = groupe répété.
+            if len(noms) >= 2:
+                issues.append(
+                    Issue(
+                        rule="redondance",
+                        table=table.name,
+                        message=(
+                            f"Les colonnes {', '.join(noms)} de la table "
+                            f"« {table.name} » forment un groupe numéroté redondant ; "
+                            "envisagez une table dédiée."
                         ),
                     )
                 )

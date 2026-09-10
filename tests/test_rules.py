@@ -5,6 +5,7 @@ from app.rules import (
     detecter_colonnes_multivaluees,
     detecter_fk_manquante,
     detecter_pk_manquante,
+    detecter_redondances,
     detecter_tables_sans_contrainte,
     detecter_types_incoherents,
 )
@@ -135,3 +136,26 @@ def test_aucune_alerte_si_colonnes_scalaires():
     # Que des types simples -> aucune alerte.
     tables = parse_ddl("CREATE TABLE articles (id INT, titre TEXT, vues INT);")
     assert detecter_colonnes_multivaluees(tables) == []
+
+
+def test_signale_groupe_de_colonnes_numerotees():
+    # telephone1/2/3 : groupe répété redondant.
+    ddl = "CREATE TABLE contacts (id INT PRIMARY KEY, telephone1 TEXT, telephone2 TEXT, telephone3 TEXT);"
+    issues = detecter_redondances(parse_ddl(ddl))
+
+    assert len(issues) == 1
+    assert issues[0].rule == "redondance"
+    assert issues[0].table == "contacts"
+    assert "telephone" in issues[0].message
+
+
+def test_pas_de_redondance_sans_numerotation():
+    # Noms distincts sans numérotation -> aucune alerte.
+    tables = parse_ddl("CREATE TABLE users (id INT, email TEXT, nom TEXT);")
+    assert detecter_redondances(tables) == []
+
+
+def test_une_seule_colonne_numerotee_ne_suffit_pas():
+    # telephone1 seule (pas de telephone2) -> pas un groupe -> aucune alerte.
+    tables = parse_ddl("CREATE TABLE contacts (id INT, telephone1 TEXT);")
+    assert detecter_redondances(tables) == []
