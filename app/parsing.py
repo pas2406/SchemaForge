@@ -65,7 +65,7 @@ def parse_ddl(ddl: str) -> list[Table]:
                 Column(
                     name=col.name,               # nom de la colonne, ex. "email"
                     type=col.args["kind"].sql(), # son type ; .sql() le reconvertit en texte
-                    is_foreign_key=a_une_fk,
+                    is_foreign_key = a_une_fk,
                 )
             )
 
