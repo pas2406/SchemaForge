@@ -4,6 +4,7 @@ Principe du projet : « le déterministe détecte, le LLM suggère, l'humain val
 Chaque règle prend les tables parsées et renvoie une liste d'Issue (problèmes trouvés).
 """
 
+from collections import defaultdict
 from dataclasses import dataclass
 
 from app.parsing import Table
@@ -52,5 +53,33 @@ def detecter_fk_manquante(tables: list[Table]) -> list[Issue]:
                         ),
                     )
                 )
+
+    return issues
+
+
+def detecter_types_incoherents(tables: list[Table]) -> list[Issue]:
+    """Signale les colonnes de même nom ayant des types différents selon les tables."""
+    # Pour chaque nom de colonne, on mémorise son type table par table.
+    # defaultdict(dict) crée automatiquement un dict vide au premier accès à une clé.
+    types_par_colonne: dict[str, dict[str, str]] = defaultdict(dict)
+    for table in tables:
+        for col in table.columns:
+            types_par_colonne[col.name][table.name] = col.type
+
+    issues: list[Issue] = []
+    for nom, types_par_table in types_par_colonne.items():
+        # set(...) sur les types : s'il reste plus d'un type distinct, ils divergent.
+        if len(set(types_par_table.values())) > 1:
+            detail = ", ".join(
+                f"{type_sql} dans {nom_table}"
+                for nom_table, type_sql in types_par_table.items()
+            )
+            issues.append(
+                Issue(
+                    rule="types_incoherents",
+                    table=", ".join(types_par_table.keys()),
+                    message=f"La colonne « {nom} » a des types différents : {detail}.",
+                )
+            )
 
     return issues

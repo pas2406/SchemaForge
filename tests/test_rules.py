@@ -1,7 +1,11 @@
 """Tests du moteur de règles (app/rules.py)."""
 
 from app.parsing import parse_ddl
-from app.rules import detecter_fk_manquante, detecter_pk_manquante
+from app.rules import (
+    detecter_fk_manquante,
+    detecter_pk_manquante,
+    detecter_types_incoherents,
+)
 
 
 def test_signale_une_table_sans_pk():
@@ -57,3 +61,34 @@ def test_fk_ignore_colonnes_sans_suffixe_id():
     # Aucune colonne en _id -> aucune alerte (id seul ne compte pas).
     tables = parse_ddl("CREATE TABLE users (id INT PRIMARY KEY, email TEXT);")
     assert detecter_fk_manquante(tables) == []
+
+
+def test_types_incoherents_signale_colonne_homonyme():
+    # "id" est INT dans users mais BIGINT dans orders -> incohérence.
+    ddl = """
+    CREATE TABLE users (id INT);
+    CREATE TABLE orders (id BIGINT);
+    """
+    issues = detecter_types_incoherents(parse_ddl(ddl))
+
+    assert len(issues) == 1
+    assert issues[0].rule == "types_incoherents"
+    assert "id" in issues[0].message
+
+
+def test_types_coherents_aucune_alerte():
+    # Même nom, même type (INT/INTEGER normalisés) -> pas d'alerte.
+    ddl = """
+    CREATE TABLE users (id INT);
+    CREATE TABLE orders (id INTEGER);
+    """
+    assert detecter_types_incoherents(parse_ddl(ddl)) == []
+
+
+def test_types_colonne_presente_dans_une_seule_table():
+    # email n'existe que dans users -> rien à comparer, pas d'alerte.
+    ddl = """
+    CREATE TABLE users (id INT, email TEXT);
+    CREATE TABLE orders (id INT);
+    """
+    assert detecter_types_incoherents(parse_ddl(ddl)) == []
