@@ -1,0 +1,6 @@
+# Configuration des outils du projet SchemaForge.
+
+[tool.pytest.ini_options]
+# Ajoute la racine du projet au chemin de recherche Python lors des tests,
+# pour que "from app.parsing import ..." fonctionne même avec un simple "pytest".
+pythonpath = ["."]
