@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 
-from app.parsing import Table
+from app.parsing import Table, parse_ddl
 
 
 @dataclass
@@ -160,5 +160,27 @@ def detecter_types_incoherents(tables: list[Table]) -> list[Issue]:
                     message=f"La colonne « {nom} » a des types différents : {detail}.",
                 )
             )
+
+    return issues
+
+
+# Toutes les règles du moteur. Ajouter une règle ici l'active dans analyser().
+TOUTES_LES_REGLES = [
+    detecter_pk_manquante,
+    detecter_fk_manquante,
+    detecter_types_incoherents,
+    detecter_tables_sans_contrainte,
+    detecter_colonnes_multivaluees,
+    detecter_redondances,
+]
+
+
+def analyser(ddl: str) -> list[Issue]:
+    """Parse un DDL puis applique toutes les règles ; renvoie tous les problèmes."""
+    tables = parse_ddl(ddl)
+
+    issues: list[Issue] = []
+    for regle in TOUTES_LES_REGLES:
+        issues.extend(regle(tables))  # extend : ajoute tous les éléments de la liste
 
     return issues

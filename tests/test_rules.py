@@ -2,6 +2,7 @@
 
 from app.parsing import parse_ddl
 from app.rules import (
+    analyser,
     detecter_colonnes_multivaluees,
     detecter_fk_manquante,
     detecter_pk_manquante,
@@ -159,3 +160,18 @@ def test_une_seule_colonne_numerotee_ne_suffit_pas():
     # telephone1 seule (pas de telephone2) -> pas un groupe -> aucune alerte.
     tables = parse_ddl("CREATE TABLE contacts (id INT, telephone1 TEXT);")
     assert detecter_redondances(tables) == []
+
+
+def test_analyser_agrege_plusieurs_regles():
+    # logs : pas de PK, user_id sans FK, ni PK ni FK -> plusieurs règles déclenchées.
+    issues = analyser("CREATE TABLE logs (user_id INT, message TEXT);")
+    regles = {i.rule for i in issues}
+
+    assert "pk_manquante" in regles
+    assert "fk_manquante" in regles
+    assert "table_sans_contrainte" in regles
+
+
+def test_analyser_schema_sain_aucun_probleme():
+    # Schéma correct -> aucune Issue.
+    assert analyser("CREATE TABLE users (id INT PRIMARY KEY, email TEXT);") == []
