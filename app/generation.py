@@ -4,6 +4,8 @@ Le LLM produit le modèle (SchemaSpec, validé par Pydantic) ; ce module le
 transforme en SQL de façon déterministe et fiable.
 """
 
+from collections.abc import Callable
+
 from pydantic import BaseModel
 
 
@@ -43,3 +45,24 @@ def rendre_ddl(schema: SchemaSpec) -> str:
         lignes = ",\n".join(f"    {_rendre_colonne(c)}" for c in table.columns)
         blocs.append(f"CREATE TABLE {table.name} (\n{lignes}\n);")
     return "\n\n".join(blocs)
+
+
+def construire_prompt_generation(description: str) -> str:
+    """Construit le prompt demandant au LLM un modèle relationnel normalisé."""
+    return (
+        "Tu es un expert en modélisation de bases de données PostgreSQL.\n"
+        f"Conçois un schéma relationnel normalisé (au moins en 3NF) pour : {description}\n\n"
+        "Réponds UNIQUEMENT en JSON avec cette structure exacte :\n"
+        '{"tables": [{"name": "...", "columns": [{"name": "...", "type": "...", '
+        '"primary_key": true/false, "nullable": true/false, '
+        '"references": "table(colonne) ou null"}]}]}'
+    )
+
+
+def generer_modele(
+    description: str,
+    appeler_llm: Callable[[str], str],
+) -> SchemaSpec:
+    """Demande au LLM un modèle relationnel et valide sa réponse JSON via Pydantic."""
+    reponse_json = appeler_llm(construire_prompt_generation(description))
+    return SchemaSpec.model_validate_json(reponse_json)

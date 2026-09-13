@@ -1,7 +1,22 @@
 """Tests du générateur de DDL déterministe (app/generation.py)."""
 
-from app.generation import ColumnSpec, SchemaSpec, TableSpec, rendre_ddl
+from app.generation import (
+    ColumnSpec,
+    SchemaSpec,
+    TableSpec,
+    generer_modele,
+    rendre_ddl,
+)
 from app.parsing import parse_ddl
+
+
+def faux_llm_schema(prompt: str) -> str:
+    """Faux LLM : renvoie un modèle relationnel figé, sans appel réseau."""
+    return (
+        '{"tables": [{"name": "articles", "columns": ['
+        '{"name": "id", "type": "SERIAL", "primary_key": true},'
+        '{"name": "titre", "type": "TEXT", "nullable": false}]}]}'
+    )
 
 
 def test_rendre_ddl_table_simple():
@@ -43,3 +58,20 @@ def test_ddl_genere_est_reparsable():
     tables = parse_ddl(ddl)
     assert tables[0].name == "clients"
     assert tables[0].has_primary_key is True
+
+
+def test_generer_modele_valide_le_json_du_llm():
+    schema = generer_modele("un blog avec des articles", appeler_llm=faux_llm_schema)
+
+    assert isinstance(schema, SchemaSpec)
+    assert schema.tables[0].name == "articles"
+
+
+def test_generer_modele_puis_rendre_ddl():
+    # Chaîne complète : description -> modèle (LLM) -> DDL déterministe.
+    schema = generer_modele("un blog", appeler_llm=faux_llm_schema)
+    ddl = rendre_ddl(schema)
+
+    assert "CREATE TABLE articles" in ddl
+    assert "id SERIAL PRIMARY KEY" in ddl
+    assert "titre TEXT NOT NULL" in ddl
