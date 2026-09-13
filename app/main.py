@@ -5,6 +5,7 @@ from collections.abc import Callable
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 
+from app.generation import SchemaSpec, generer_modele, rendre_ddl
 from app.llm import appeler_groq
 from app.rules import Issue, analyser
 from app.suggestions import Suggestion, generer_suggestion
@@ -16,6 +17,16 @@ app = FastAPI(title="SchemaForge API")
 class AnalyzeRequest(BaseModel):
     # Pydantic valide le corps de la requête : "ddl" doit être une chaîne présente.
     ddl: str
+
+
+class GenerateRequest(BaseModel):
+    # Description en langage naturel du schéma souhaité.
+    description: str
+
+
+class GenerateResponse(BaseModel):
+    modele: SchemaSpec  # le modèle relationnel conçu par le LLM
+    ddl: str            # le DDL PostgreSQL généré à partir du modèle
 
 
 def fournir_llm() -> Callable[[str], str]:
@@ -43,3 +54,13 @@ def suggest(
     # Le déterministe détecte, le LLM suggère : une suggestion par problème trouvé.
     issues = analyser(request.ddl)
     return [generer_suggestion(issue, request.ddl, appeler_llm) for issue in issues]
+
+
+@app.post("/generate")
+def generate(
+    request: GenerateRequest,
+    appeler_llm: Callable[[str], str] = Depends(fournir_llm),
+) -> GenerateResponse:
+    # Langage naturel -> modèle relationnel (LLM) -> DDL PostgreSQL (déterministe).
+    modele = generer_modele(request.description, appeler_llm)
+    return GenerateResponse(modele=modele, ddl=rendre_ddl(modele))

@@ -18,6 +18,15 @@ def faux_llm(prompt: str) -> str:
     )
 
 
+def faux_llm_schema(prompt: str) -> str:
+    """Faux LLM injecté dans /generate : renvoie un modèle relationnel figé."""
+    return (
+        '{"tables": [{"name": "articles", "columns": ['
+        '{"name": "id", "type": "SERIAL", "primary_key": true},'
+        '{"name": "titre", "type": "TEXT", "nullable": false}]}]}'
+    )
+
+
 def test_health_repond_ok():
     response = client.get("/health")
     assert response.status_code == 200
@@ -68,6 +77,25 @@ def test_suggest_retourne_une_suggestion_par_probleme():
         assert "PRIMARY KEY" in suggestions[0]["ddl_corrige"]
     finally:
         app.dependency_overrides.clear()
+
+
+def test_generate_retourne_le_modele_et_le_ddl():
+    app.dependency_overrides[fournir_llm] = lambda: faux_llm_schema
+    try:
+        response = client.post("/generate", json={"description": "un blog"})
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["modele"]["tables"][0]["name"] == "articles"
+        assert "CREATE TABLE articles" in data["ddl"]
+        assert "id SERIAL PRIMARY KEY" in data["ddl"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_generate_rejette_corps_sans_description():
+    # Pydantic rejette un corps sans "description" -> 422.
+    assert client.post("/generate", json={}).status_code == 422
 
 
 def test_suggest_schema_sain_ne_renvoie_rien():
