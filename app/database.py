@@ -60,6 +60,12 @@ def creer_tables() -> None:
     Base.metadata.create_all(engine)
 
 
+def get_session():
+    """Dépendance FastAPI : fournit une session, fermée automatiquement après usage."""
+    with SessionLocal() as session:
+        yield session
+
+
 def enregistrer_analyse(
     session: Session,
     ddl: str,

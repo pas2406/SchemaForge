@@ -1,8 +1,31 @@
 """Tests de l'API HTTP (app/main.py) via le TestClient de FastAPI."""
 
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
+from app.database import Base, get_session
 from app.main import app, fournir_llm
+
+# Base SQLite en mémoire partagée pour tous les tests API (pas de PostgreSQL).
+# StaticPool + check_same_thread : une seule connexion partagée par le TestClient.
+_moteur_test = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+Base.metadata.create_all(_moteur_test)
+_SessionTest = sessionmaker(bind=_moteur_test)
+
+
+def _session_de_test():
+    with _SessionTest() as s:
+        yield s
+
+
+# On branche la session SQLite à la place de PostgreSQL pour toute la durée des tests.
+app.dependency_overrides[get_session] = _session_de_test
 
 # TestClient appelle l'app en mémoire, sans lancer uvicorn ni ouvrir de port.
 client = TestClient(app)
@@ -76,7 +99,8 @@ def test_suggest_retourne_une_suggestion_par_probleme():
         assert len(suggestions) == 2
         assert "PRIMARY KEY" in suggestions[0]["ddl_corrige"]
     finally:
-        app.dependency_overrides.clear()
+        # On retire UNIQUEMENT l'override du LLM (garder celui de la session SQLite).
+        app.dependency_overrides.pop(fournir_llm, None)
 
 
 def test_generate_retourne_le_modele_et_le_ddl():
@@ -90,7 +114,8 @@ def test_generate_retourne_le_modele_et_le_ddl():
         assert "CREATE TABLE articles" in data["ddl"]
         assert "id SERIAL PRIMARY KEY" in data["ddl"]
     finally:
-        app.dependency_overrides.clear()
+        # On retire UNIQUEMENT l'override du LLM (garder celui de la session SQLite).
+        app.dependency_overrides.pop(fournir_llm, None)
 
 
 def test_generate_rejette_corps_sans_description():
@@ -109,4 +134,19 @@ def test_suggest_schema_sain_ne_renvoie_rien():
         assert response.status_code == 200
         assert response.json() == []
     finally:
-        app.dependency_overrides.clear()
+        # On retire UNIQUEMENT l'override du LLM (garder celui de la session SQLite).
+        app.dependency_overrides.pop(fournir_llm, None)
+
+
+def test_history_relit_les_analyses_enregistrees():
+    # Une analyse enregistrée via /analyze doit réapparaître dans /history.
+    client.post("/analyze", json={"ddl": "CREATE TABLE journal (contenu TEXT);"})
+
+    response = client.get("/history")
+    assert response.status_code == 200
+
+    analyses = response.json()
+    ddls = [a["ddl"] for a in analyses]
+    assert any(d.startswith("CREATE TABLE journal") for d in ddls)
+    # Chaque analyse expose bien sa liste de problèmes.
+    assert isinstance(analyses[0]["problemes"], list)

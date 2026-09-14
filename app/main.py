@@ -1,10 +1,13 @@
 """Point d'entrée de l'API SchemaForge."""
 
 from collections.abc import Callable
+from datetime import datetime
 
 from fastapi import Depends, FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
 
+from app.database import enregistrer_analyse, get_session, lister_analyses
 from app.generation import SchemaSpec, generer_modele, rendre_ddl
 from app.llm import appeler_groq
 from app.rules import Issue, analyser
@@ -29,6 +32,22 @@ class GenerateResponse(BaseModel):
     ddl: str            # le DDL PostgreSQL généré à partir du modèle
 
 
+class ProblemeOut(BaseModel):
+    # from_attributes : autorise Pydantic à lire les attributs d'un objet ORM.
+    model_config = ConfigDict(from_attributes=True)
+    rule: str
+    table: str
+    message: str
+
+
+class AnalyseOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    ddl: str
+    created_at: datetime
+    problemes: list[ProblemeOut]
+
+
 def fournir_llm() -> Callable[[str], str]:
     # La "prise" : en prod on branche le vrai Groq ; en test on l'override par un faux.
     return appeler_groq
@@ -41,9 +60,15 @@ def health() -> dict[str, str]:
 
 
 @app.post("/analyze")
-def analyze(request: AnalyzeRequest) -> list[Issue]:
-    # Le moteur déterministe détecte les incohérences ; FastAPI sérialise les Issue en JSON.
-    return analyser(request.ddl)
+def analyze(
+    request: AnalyzeRequest,
+    session: Session = Depends(get_session),
+) -> list[Issue]:
+    # Le moteur déterministe détecte les incohérences...
+    issues = analyser(request.ddl)
+    # ...et on enregistre l'analyse dans l'historique.
+    enregistrer_analyse(session, request.ddl, issues)
+    return issues
 
 
 @app.post("/suggest")
@@ -64,3 +89,9 @@ def generate(
     # Langage naturel -> modèle relationnel (LLM) -> DDL PostgreSQL (déterministe).
     modele = generer_modele(request.description, appeler_llm)
     return GenerateResponse(modele=modele, ddl=rendre_ddl(modele))
+
+
+@app.get("/history")
+def history(session: Session = Depends(get_session)) -> list[AnalyseOut]:
+    # Relit l'historique des analyses enregistrées (plus récentes d'abord).
+    return lister_analyses(session)
