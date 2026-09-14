@@ -5,16 +5,18 @@ SQLAlchemy traduit nos objets Python (AnalyseDB, ProblemeDB) en lignes SQL.
 
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, create_engine, func
+from sqlalchemy import ForeignKey, create_engine, func, select
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
+    Session,
     mapped_column,
     relationship,
     sessionmaker,
 )
 
 from app.config import settings
+from app.rules import Issue
 
 # Le moteur gère les connexions à PostgreSQL (adresse lue depuis .env).
 engine = create_engine(settings.database_url)
@@ -56,3 +58,27 @@ class ProblemeDB(Base):
 def creer_tables() -> None:
     """Crée les tables dans PostgreSQL si elles n'existent pas encore."""
     Base.metadata.create_all(engine)
+
+
+def enregistrer_analyse(
+    session: Session,
+    ddl: str,
+    issues: list[Issue],
+) -> AnalyseDB:
+    """Sauvegarde une analyse et ses problèmes détectés, puis la renvoie."""
+    analyse = AnalyseDB(
+        ddl=ddl,
+        problemes=[
+            ProblemeDB(rule=i.rule, table=i.table, message=i.message) for i in issues
+        ],
+    )
+    session.add(analyse)   # place l'objet dans la "conversation"
+    session.commit()       # écrit réellement en base
+    session.refresh(analyse)  # recharge l'objet (id, created_at remplis par la base)
+    return analyse
+
+
+def lister_analyses(session: Session) -> list[AnalyseDB]:
+    """Renvoie toutes les analyses enregistrées, de la plus récente à la plus ancienne."""
+    requete = select(AnalyseDB).order_by(AnalyseDB.created_at.desc())
+    return list(session.scalars(requete))
