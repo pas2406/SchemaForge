@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     groq_model: str = "openai/gpt-oss-20b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
 
+    # Connexion PostgreSQL (obligatoire pour l'historique).
+    database_url: str
+
 
 # Instance unique, importable partout : from app.config import settings
 settings = Settings()
