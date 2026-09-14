@@ -56,6 +56,12 @@ def test_health_repond_ok():
     assert response.json() == {"status": "ok"}
 
 
+def test_cors_autorise_le_front():
+    # Une requête venant de l'origine du front doit être autorisée (en-tête CORS).
+    response = client.get("/health", headers={"Origin": "http://localhost:5173"})
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
 def test_analyze_retourne_les_problemes():
     # DDL avec plusieurs incohérences -> 200 + liste d'Issue en JSON.
     response = client.post(

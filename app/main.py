@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import datetime
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,14 @@ from app.suggestions import Suggestion, generer_suggestion
 
 # Instance aiguillant les requêtes ; uvicorn la démarre via "app.main:app".
 app = FastAPI(title="SchemaForge API")
+
+# Autorise le front (servi par Vite) à appeler l'API depuis le navigateur.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class AnalyzeRequest(BaseModel):
