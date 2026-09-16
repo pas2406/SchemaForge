@@ -1,0 +1,152 @@
+.conteneur {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+  text-align: left;
+}
+
+/* Titre en dégradé animé */
+.conteneur h1 {
+  font-size: 52px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1.5px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titre-brille 6s linear infinite;
+}
+
+@keyframes titre-brille {
+  to { background-position: 200% center; }
+}
+
+.soustitre {
+  color: var(--text-dim);
+  margin: 8px 0 28px;
+  font-size: 18px;
+}
+
+/* La "carte" translucide (glassmorphism) */
+.carte {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+textarea {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  resize: vertical;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.25);
+}
+
+button {
+  margin-top: 16px;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  background-size: 150% 150%;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, background-position 0.4s;
+  box-shadow: 0 8px 20px rgba(167, 139, 250, 0.35);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background-position: 100% 100%;
+  box-shadow: 0 12px 26px rgba(244, 114, 182, 0.45);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.erreur {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+
+.problemes {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.problemes li {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  backdrop-filter: blur(8px);
+  /* Apparition en fondu + glissement, décalée par élément */
+  animation: apparition 0.4s ease both;
+}
+
+.problemes li:nth-child(2) { animation-delay: 0.06s; }
+.problemes li:nth-child(3) { animation-delay: 0.12s; }
+.problemes li:nth-child(4) { animation-delay: 0.18s; }
+.problemes li:nth-child(5) { animation-delay: 0.24s; }
+
+@keyframes apparition {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.regle {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-right: 8px;
+}
+
+.table {
+  font-weight: 600;
+  color: #fff;
+  margin-right: 8px;
+}
+
+.message {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
