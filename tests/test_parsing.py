@@ -1,6 +1,14 @@
 """Tests du parser DDL (app/parsing.py)."""
 
-from app.parsing import parse_ddl
+import pytest
+
+from app.parsing import DDLInvalide, parse_ddl
+
+
+def test_parse_ddl_syntaxe_invalide_leve_ddl_invalide():
+    # DDL invalide (virgule manquante) -> erreur claire, pas un crash brut.
+    with pytest.raises(DDLInvalide):
+        parse_ddl("CREATE TABLE t (id INT email TEXT);")
 
 
 def test_parse_une_table_avec_colonnes():

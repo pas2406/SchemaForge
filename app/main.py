@@ -3,14 +3,16 @@
 from collections.abc import Callable
 from datetime import datetime
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.database import enregistrer_analyse, get_session, lister_analyses
 from app.generation import SchemaSpec, generer_modele, rendre_ddl
 from app.llm import appeler_groq
+from app.parsing import DDLInvalide
 from app.rules import Issue, analyser
 from app.suggestions import Suggestion, generer_suggestion
 
@@ -24,6 +26,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(DDLInvalide)
+async def _gerer_ddl_invalide(request: Request, exc: DDLInvalide) -> JSONResponse:
+    # SQL invalide -> 400 (au lieu d'un 500 brut), avec un message lisible.
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
 class AnalyzeRequest(BaseModel):

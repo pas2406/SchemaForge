@@ -4,10 +4,19 @@ On s'appuie sur sqlglot (AST) plutôt que sur des recherches de texte : plus fia
 """
 # Le module dataclass sert à facilement créer des classes qui ont principalement pour rôle de stocker des données.
 
+import re
 from dataclasses import dataclass, field
 
 import sqlglot
 from sqlglot import exp
+from sqlglot.errors import ParseError
+
+# Codes couleur ANSI que sqlglot ajoute à ses messages d'erreur (illisibles en web).
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+class DDLInvalide(ValueError):
+    """Le DDL fourni n'est pas du SQL analysable (erreur de syntaxe)."""
 
 
 @dataclass
@@ -32,7 +41,14 @@ def parse_ddl(ddl: str) -> list[Table]:
 
     # sqlglot.parse() lit TOUT le DDL et renvoie une liste d'arbres (un par énoncé SQL).
     # read="postgres" : on lui dit d'interpréter la syntaxe façon PostgreSQL.
-    for statement in sqlglot.parse(ddl, read="postgres"):
+    # Si le SQL est invalide, on transforme l'erreur brute en une erreur claire.
+    try:
+        statements = sqlglot.parse(ddl, read="postgres")
+    except ParseError as e:
+        message = _ANSI.sub("", str(e))  # on retire les codes couleur du terminal
+        raise DDLInvalide(f"SQL invalide : {message}") from e
+
+    for statement in statements:
 
         # Un DDL peut contenir autre chose que des tables (CREATE INDEX, CREATE VIEW...).
         # On ignore tout ce qui n'est pas un "CREATE TABLE".

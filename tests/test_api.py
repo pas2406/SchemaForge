@@ -90,6 +90,13 @@ def test_analyze_rejette_corps_sans_ddl():
     assert response.status_code == 422
 
 
+def test_analyze_ddl_invalide_renvoie_400():
+    # DDL syntaxiquement invalide -> 400 avec message clair (pas 500).
+    response = client.post("/analyze", json={"ddl": "CREATE TABLE t (a INT b TEXT);"})
+    assert response.status_code == 400
+    assert response.json().get("detail")
+
+
 def test_suggest_retourne_une_suggestion_par_probleme():
     # On remplace le vrai LLM par le faux, le temps du test.
     app.dependency_overrides[fournir_llm] = lambda: faux_llm
