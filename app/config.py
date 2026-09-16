@@ -4,12 +4,18 @@
 refuse de démarrer avec un message clair plutôt que de planter plus tard.
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Chemin absolu vers .env (à la racine du projet), pour le trouver quel que soit
+# le dossier depuis lequel on lance l'app (racine, frontend/, etc.).
+_FICHIER_ENV = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
     # Lit automatiquement le fichier .env ; ignore les variables non déclarées ici.
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_FICHIER_ENV, extra="ignore")
 
     # Clé API Groq (obligatoire — pas de valeur par défaut).
     groq_api_key: str
