@@ -1,37 +1,100 @@
 :root {
-  --accent: #a78bfa;
-  --accent2: #f472b6;
-  --text: #e5e7eb;
-  --text-dim: #a5b4fc;
-  --card: rgba(255, 255, 255, 0.07);
-  --border: rgba(255, 255, 255, 0.15);
-  --mono: ui-monospace, "SF Mono", Consolas, monospace;
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Fonds */
+  --bg: #0b0d12;
+  --surface-1: #12161d;
+  --surface-2: #171c24;
+  --surface-3: #1c222c;
+
+  /* Texte */
+  --text: #e7ecf3;
+  --text-dim: #8b97a8;
+  --text-faint: #5b6675;
+
+  /* Bordures / lignes fines */
+  --border: #232a35;
+  --border-strong: #2e3742;
+
+  /* Couleurs fonctionnelles (parcimonie) */
+  --primary: #27e0b3;   /* turquoise : actions, focus */
+  --primary-dim: #1b9d7f;
+  --accent: #5b8cff;    /* bleu électrique : secondaire */
+  --error: #ff6b6b;
+  --warning: #f0a35e;
+  --info: #5b8cff;
+
+  --header-bg: rgba(11, 13, 18, 0.85);
+  --halo: rgba(39, 224, 179, 0.05);
+
+  --sans: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --radius: 8px;
+  --radius-sm: 6px;
 
   color-scheme: dark;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thème clair (activé via data-theme="light" sur <html>) */
+:root[data-theme="light"] {
+  --bg: #f6f7f9;
+  --surface-1: #ffffff;
+  --surface-2: #f1f3f5;
+  --surface-3: #e8ecf0;
+
+  --text: #1a1f27;
+  --text-dim: #566173;
+  --text-faint: #8b97a8;
+
+  --border: #e4e8ec;
+  --border-strong: #d0d7de;
+
+  --primary: #12b890;
+  --primary-dim: #0e9576;
+  --accent: #3b6fe0;
+  --error: #e5484d;
+  --warning: #c6791f;
+  --info: #3b6fe0;
+
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --halo: rgba(18, 184, 144, 0.06);
+
+  color-scheme: light;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html, body, #root {
   margin: 0;
   min-height: 100vh;
-  font-family: var(--sans);
-  color: var(--text);
-  /* Dégradé animé en fond */
-  background: linear-gradient(-45deg, #1e1b4b, #4c1d95, #831843, #312e81);
-  background-size: 400% 400%;
-  animation: fond-anime 18s ease infinite;
 }
 
-@keyframes fond-anime {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+body {
+  background:
+    radial-gradient(900px 500px at 85% -10%, var(--halo), transparent 60%),
+    var(--bg);
 }
 
-#root {
-  min-height: 100vh;
+h1, h2, h3, p {
+  margin: 0;
 }
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: rgba(39, 224, 179, 0.25);
+}
+
+/* Barre de défilement discrète */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
