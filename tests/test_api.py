@@ -136,6 +136,27 @@ def test_generate_rejette_corps_sans_description():
     assert client.post("/generate", json={}).status_code == 422
 
 
+def test_suggest_issue_retourne_une_correction():
+    # Une seule issue envoyée -> une seule correction (appel LLM factice).
+    app.dependency_overrides[fournir_llm] = lambda: faux_llm
+    try:
+        response = client.post(
+            "/suggest-issue",
+            json={
+                "ddl": "CREATE TABLE logs (message TEXT);",
+                "rule": "pk_manquante",
+                "table": "logs",
+                "message": "pas de PK",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "PRIMARY KEY" in data["ddl_corrige"]
+        assert data["justification"]
+    finally:
+        app.dependency_overrides.pop(fournir_llm, None)
+
+
 def test_suggest_schema_sain_ne_renvoie_rien():
     # Aucun problème -> aucune suggestion, et le LLM n'est jamais appelé.
     app.dependency_overrides[fournir_llm] = lambda: faux_llm

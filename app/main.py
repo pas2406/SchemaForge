@@ -39,6 +39,14 @@ class AnalyzeRequest(BaseModel):
     ddl: str
 
 
+class SuggestIssueRequest(BaseModel):
+    # Le DDL + un seul problème détecté (pour suggérer sa correction à la demande).
+    ddl: str
+    rule: str
+    table: str
+    message: str
+
+
 class GenerateRequest(BaseModel):
     # Description en langage naturel du schéma souhaité.
     description: str
@@ -96,6 +104,16 @@ def suggest(
     # Le déterministe détecte, le LLM suggère : une suggestion par problème trouvé.
     issues = analyser(request.ddl)
     return [generer_suggestion(issue, request.ddl, appeler_llm) for issue in issues]
+
+
+@app.post("/suggest-issue")
+def suggest_issue(
+    request: SuggestIssueRequest,
+    appeler_llm: Callable[[str], str] = Depends(fournir_llm),
+) -> Suggestion:
+    # Correction à la demande pour UN seul problème (le front appelle par issue).
+    issue = Issue(rule=request.rule, table=request.table, message=request.message)
+    return generer_suggestion(issue, request.ddl, appeler_llm)
 
 
 @app.post("/generate")
