@@ -11,6 +11,7 @@ import { illuminer, surbrillance } from './surbrillance'
 import { useLangue, LANGUES } from './i18n'
 import Diagramme from './Diagramme'
 import Generer from './Generer'
+import Historique from './Historique'
 import Fond from './Fond'
 import './App.css'
 
@@ -81,7 +82,8 @@ function App() {
   // Survol partagé entre la liste, l'éditeur et le diagramme :
   // { issue } quand on survole un problème, { table } quand on survole une table du diagramme.
   const [survol, setSurvol] = useState(null)
-  // Écran affiché : 'analyser' (DDL -> problèmes) ou 'generer' (texte -> DDL).
+  // Écran affiché : 'analyser' (DDL -> problèmes), 'generer' (texte -> DDL)
+  // ou 'historique' (analyses passées).
   // Un simple état suffit : deux écrans ne justifient pas un routeur.
   const [onglet, setOnglet] = useState('analyser')
 
@@ -236,6 +238,20 @@ function App() {
     vue.focus()
   }
 
+  // Rouvre une analyse de l'historique : on réaffiche le résultat ENREGISTRÉ
+  // plutôt que de relancer /analyze. Pourquoi : c'est le sens d'un historique
+  // (ce qui avait été trouvé à ce moment-là), et relancer créerait un doublon en base.
+  function ouvrirAnalyse(a) {
+    setDdl(a.ddl)
+    setDdlAnalyse(a.ddl)
+    setProblemes(a.problemes) // même forme que la réponse de /analyze : { rule, table, message }
+    setErreur(null)
+    setFixes({})
+    setSurvol(null)
+    setNumAnalyse((n) => n + 1) // rejoue les animations de la liste
+    setOnglet('analyser')
+  }
+
   function vider() {
     setDdl('')
     setProblemes(null)
@@ -258,7 +274,7 @@ function App() {
         </div>
         {/* Onglets : même pilule segmentée que le choix de langue */}
         <div className="onglets" role="group" aria-label={t('onglet.choix')}>
-          {['analyser', 'generer'].map((o) => (
+          {['analyser', 'generer', 'historique'].map((o) => (
             <button key={o} className="onglet" aria-pressed={onglet === o} onClick={() => setOnglet(o)}>
               {t(`onglet.${o}`)}
             </button>
@@ -355,6 +371,8 @@ function App() {
         </aside>
       </main>
       <Generer api={API} hidden={onglet !== 'generer'} />
+      {/* Historique : monté seulement quand on l'ouvre -> rechargé à chaque fois */}
+      {onglet === 'historique' && <Historique api={API} onOuvrir={ouvrirAnalyse} />}
     </div>
     </>
   )

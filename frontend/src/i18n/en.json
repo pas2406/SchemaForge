@@ -76,5 +76,12 @@
   "generer.tables": { "one": "{n} table", "other": "{n} tables" },
   "generer.ddl": "PostgreSQL DDL",
   "generer.telecharger": "Download .sql",
-  "generer.vide": "Describe your domain on the left: the model designed by the LLM and the PostgreSQL DDL will appear here."
+  "generer.vide": "Describe your domain on the left: the model designed by the LLM and the PostgreSQL DDL will appear here.",
+
+  "onglet.historique": "History",
+  "historique.titre": "Recent analyses",
+  "historique.compte": { "one": "{n} analysis", "other": "{n} analyses" },
+  "historique.chargement": "Loading history…",
+  "historique.vide": "No analysis recorded yet.",
+  "historique.sansProbleme": "no issues"
 }

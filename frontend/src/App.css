@@ -1144,6 +1144,58 @@ del.diff-ligne .diff-marge {
   font-weight: 400;
 }
 
+/* Historique : une seule colonne, liste d'entrées cliquables */
+.grille-simple {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 960px;
+}
+.historique {
+  list-style: none;
+  margin: 0;
+  padding: var(--s2);
+}
+.historique-entree {
+  display: grid;
+  grid-template-columns: 11rem auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s4);
+  width: 100%;
+  padding: var(--s2) var(--s3);
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--t-fast) ease;
+}
+.historique-entree:hover {
+  background: var(--panel-hover);
+}
+.historique-date {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.historique-apercu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--cyan);
+}
+.puce-ok {
+  background: var(--success-tint);
+  color: var(--green);
+}
+/* Petit écran : la date passe au-dessus, puce et aperçu en dessous */
+@media (max-width: 600px) {
+  .historique-entree {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .historique-date {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Zone de texte libre (formulaire de génération) */
 .zone-texte {
   display: block;
