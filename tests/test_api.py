@@ -190,3 +190,18 @@ def test_history_relit_les_analyses_enregistrees():
     assert any(d.startswith("CREATE TABLE journal") for d in ddls)
     # Chaque analyse expose bien sa liste de problèmes.
     assert isinstance(analyses[0]["problemes"], list)
+
+
+def test_history_respecte_le_parametre_limit():
+    client.post("/analyze", json={"ddl": "CREATE TABLE t1 (id INT);"})
+    client.post("/analyze", json={"ddl": "CREATE TABLE t2 (id INT);"})
+
+    response = client.get("/history", params={"limit": 1})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_history_refuse_un_limit_hors_bornes():
+    # Query(ge=1, le=200) : FastAPI rejette la valeur avant même d'appeler la route.
+    assert client.get("/history", params={"limit": 0}).status_code == 422
+    assert client.get("/history", params={"limit": 1000}).status_code == 422

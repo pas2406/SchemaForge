@@ -36,3 +36,12 @@ def test_lister_analyses_renvoie_tout(session):
 
     analyses = lister_analyses(session)
     assert len(analyses) == 2
+
+
+def test_lister_analyses_limite_garde_les_plus_recentes(session):
+    for nom in ("a", "b", "c"):
+        enregistrer_analyse(session, f"CREATE TABLE {nom} (id INT);", [])
+
+    analyses = lister_analyses(session, limite=2)
+    # Seules les 2 dernières, la plus récente en tête.
+    assert [a.ddl[13] for a in analyses] == ["c", "b"]

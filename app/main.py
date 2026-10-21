@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
@@ -129,6 +129,10 @@ def generate(
 
 
 @app.get("/history")
-def history(session: Session = Depends(get_session)) -> list[AnalyseOut]:
-    # Relit l'historique des analyses enregistrées (plus récentes d'abord).
-    return lister_analyses(session)
+def history(
+    limit: int = Query(50, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> list[AnalyseOut]:
+    # Relit les dernières analyses (plus récentes d'abord). limit borné : la table
+    # grossit à chaque /analyze, on ne renvoie jamais tout d'un coup.
+    return lister_analyses(session, limite=limit)

@@ -84,7 +84,12 @@ def enregistrer_analyse(
     return analyse
 
 
-def lister_analyses(session: Session) -> list[AnalyseDB]:
-    """Renvoie toutes les analyses enregistrées, de la plus récente à la plus ancienne."""
-    requete = select(AnalyseDB).order_by(AnalyseDB.created_at.desc())
+def lister_analyses(session: Session, limite: int | None = None) -> list[AnalyseDB]:
+    """Renvoie les analyses enregistrées, de la plus récente à la plus ancienne."""
+    # id en second critère : deux analyses à la même horodate gardent un ordre stable.
+    requete = select(AnalyseDB).order_by(AnalyseDB.created_at.desc(), AnalyseDB.id.desc())
+    if limite is not None:
+        # LIMIT côté SQL : la base ne renvoie que les N lignes utiles, au lieu
+        # de tout charger en Python puis de couper.
+        requete = requete.limit(limite)
     return list(session.scalars(requete))
