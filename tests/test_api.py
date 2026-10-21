@@ -205,3 +205,24 @@ def test_history_refuse_un_limit_hors_bornes():
     # Query(ge=1, le=200) : FastAPI rejette la valeur avant même d'appeler la route.
     assert client.get("/history", params={"limit": 0}).status_code == 422
     assert client.get("/history", params={"limit": 1000}).status_code == 422
+
+
+def test_delete_history_id_supprime_une_analyse():
+    client.post("/analyze", json={"ddl": "CREATE TABLE a_supprimer (x INT);"})
+    cible = client.get("/history", params={"limit": 1}).json()[0]
+
+    response = client.delete(f"/history/{cible['id']}")
+    assert response.status_code == 204
+    ids = [a["id"] for a in client.get("/history").json()]
+    assert cible["id"] not in ids
+
+
+def test_delete_history_id_inconnu_renvoie_404():
+    assert client.delete("/history/999999").status_code == 404
+
+
+def test_delete_history_vide_tout():
+    client.post("/analyze", json={"ddl": "CREATE TABLE x (y INT);"})
+
+    assert client.delete("/history").status_code == 204
+    assert client.get("/history").json() == []

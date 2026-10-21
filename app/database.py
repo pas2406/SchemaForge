@@ -5,7 +5,7 @@ SQLAlchemy traduit nos objets Python (AnalyseDB, ProblemeDB) en lignes SQL.
 
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, create_engine, func, select
+from sqlalchemy import ForeignKey, create_engine, delete, func, select
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -93,3 +93,27 @@ def lister_analyses(session: Session, limite: int | None = None) -> list[Analyse
         # de tout charger en Python puis de couper.
         requete = requete.limit(limite)
     return list(session.scalars(requete))
+
+
+def supprimer_analyse(session: Session, analyse_id: int) -> bool:
+    """Supprime une analyse et ses problèmes ; False si l'id n'existe pas."""
+    analyse = session.get(AnalyseDB, analyse_id)
+    if analyse is None:
+        return False
+    # session.delete (objet par objet) applique la cascade de la relation :
+    # les ProblemeDB de cette analyse sont supprimés avec elle.
+    session.delete(analyse)
+    session.commit()
+    return True
+
+
+def vider_historique(session: Session) -> int:
+    """Supprime toutes les analyses et leurs problèmes ; renvoie le nombre d'analyses."""
+    # Requêtes groupées (un seul DELETE chacune) : elles CONTOURNENT la cascade
+    # de l'ORM. On efface donc d'abord les problèmes (qui pointent vers les
+    # analyses), puis les analyses ; dans l'autre ordre, PostgreSQL refuserait
+    # (clé étrangère analyse_id vers une ligne disparue).
+    session.execute(delete(ProblemeDB))
+    nombre = session.execute(delete(AnalyseDB)).rowcount
+    session.commit()  # une seule transaction : tout ou rien
+    return nombre

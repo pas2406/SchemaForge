@@ -3,13 +3,19 @@
 from collections.abc import Callable
 from datetime import datetime
 
-from fastapi import Depends, FastAPI, Query, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
-from app.database import enregistrer_analyse, get_session, lister_analyses
+from app.database import (
+    enregistrer_analyse,
+    get_session,
+    lister_analyses,
+    supprimer_analyse,
+    vider_historique,
+)
 from app.generation import SchemaSpec, generer_modele, rendre_ddl
 from app.llm import appeler_groq
 from app.parsing import DDLInvalide
@@ -136,3 +142,19 @@ def history(
     # Relit les dernières analyses (plus récentes d'abord). limit borné : la table
     # grossit à chaque /analyze, on ne renvoie jamais tout d'un coup.
     return lister_analyses(session, limite=limit)
+
+
+@app.delete("/history/{analyse_id}", status_code=204)
+def delete_analyse(analyse_id: int, session: Session = Depends(get_session)) -> Response:
+    # 204 No Content : supprimé, rien à renvoyer. 404 si l'id n'existe pas,
+    # pour que le front distingue « déjà supprimée » d'une vraie réussite.
+    if not supprimer_analyse(session, analyse_id):
+        raise HTTPException(status_code=404, detail="Analyse introuvable")
+    return Response(status_code=204)
+
+
+@app.delete("/history", status_code=204)
+def delete_history(session: Session = Depends(get_session)) -> Response:
+    # Vide tout l'historique (le front demande confirmation avant d'appeler).
+    vider_historique(session)
+    return Response(status_code=204)
