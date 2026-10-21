@@ -92,5 +92,10 @@
   "historique.confirmerUneTitre": "Delete this analysis?",
   "historique.confirmerUne": "The analysis from {date} and its issues will be permanently deleted.",
   "historique.confirmerUneBtn": "Delete",
-  "btn.annuler": "Cancel"
+  "btn.annuler": "Cancel",
+
+  "pagination.aria": "History pages",
+  "pagination.precedent": "Previous",
+  "pagination.suivant": "Next",
+  "pagination.position": "Page {page} of {total}"
 }

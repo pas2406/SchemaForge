@@ -92,5 +92,10 @@
   "historique.confirmerUneTitre": "Supprimer cette analyse ?",
   "historique.confirmerUne": "L’analyse du {date} et ses problèmes seront supprimés définitivement.",
   "historique.confirmerUneBtn": "Supprimer",
-  "btn.annuler": "Annuler"
+  "btn.annuler": "Annuler",
+
+  "pagination.aria": "Pages de l’historique",
+  "pagination.precedent": "Précédent",
+  "pagination.suivant": "Suivant",
+  "pagination.position": "Page {page} / {total}"
 }

@@ -1234,6 +1234,25 @@ del.diff-ligne .diff-marge {
   }
 }
 
+/* Pagination de l'historique : Précédent · Page x / y · Suivant */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  border-top: var(--trait) solid var(--line);
+}
+.pagination-position {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums; /* chiffres à largeur fixe : rien ne bouge */
+}
+.pagination .btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ================= Fenêtre de confirmation (<dialog>) ================= */
 .confirmation {
   width: min(440px, calc(100vw - 2 * var(--s4)));

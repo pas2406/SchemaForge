@@ -10,6 +10,10 @@ import Confirmation from './Confirmation'
 // doit être celui que DELETE /history va réellement supprimer.
 const LIMITE = 100
 
+// Pagination côté front : au plus 100 analyses (rétention), déjà toutes
+// chargées ; les découper en pages de 10 ne demande aucun nouvel appel.
+const PAR_PAGE = 10
+
 // Écran « Historique » : les dernières analyses enregistrées en base.
 // Contrairement aux deux autres écrans, App.jsx le MONTE à chaque ouverture de
 // l'onglet (et le démonte en le quittant) : on veut une liste fraîche, qui
@@ -25,6 +29,7 @@ export default function Historique({ api, onOuvrir }) {
   // Ce qui attend confirmation : null (fenêtre fermée), 'tout', ou une analyse.
   // Un seul état pour les deux cas : une seule fenêtre, un message adapté.
   const [aConfirmer, setAConfirmer] = useState(null)
+  const [page, setPage] = useState(0) // numéro de page, à partir de 0 (seul état stocké)
 
   useEffect(() => {
     // annule : si l'onglet est quitté avant la réponse, on l'ignore (le
@@ -72,6 +77,13 @@ export default function Historique({ api, onOuvrir }) {
     setAConfirmer(null)
   }
 
+  // État DÉRIVÉ : calculé à chaque rendu à partir de la liste et de page, rien
+  // d'autre n'est stocké. Math.min borne la page : si on supprime la dernière
+  // analyse de la dernière page, on retombe sur la page précédente, sans effet.
+  const nbPages = Math.max(1, Math.ceil((analyses?.length ?? 0) / PAR_PAGE))
+  const pageAffichee = Math.min(page, nbPages - 1)
+  const visibles = analyses?.slice(pageAffichee * PAR_PAGE, (pageAffichee + 1) * PAR_PAGE) ?? []
+
   // Intl formate la date selon la langue choisie (22 oct. 2026, 00:31 / Oct 22, 2026, 12:31 AM).
   const formatDate = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -99,7 +111,7 @@ export default function Historique({ api, onOuvrir }) {
 
         {!erreur && analyses?.length > 0 && (
           <ul className="historique">
-            {analyses.map((a) => (
+            {visibles.map((a) => (
               <li key={a.id} className="historique-ligne">
                 {/* Un bouton (et non un div cliquable) : accessible au clavier, Tab + Entrée */}
                 <button className="historique-entree" onClick={() => onOuvrir(a)}>
@@ -127,6 +139,30 @@ export default function Historique({ api, onOuvrir }) {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Navigation entre pages, seulement s'il y en a plusieurs */}
+        {!erreur && nbPages > 1 && (
+          <nav className="pagination" aria-label={t('pagination.aria')}>
+            <button
+              className="btn btn-fantome"
+              onClick={() => setPage(pageAffichee - 1)}
+              disabled={pageAffichee === 0}
+            >
+              ‹ {t('pagination.precedent')}
+            </button>
+            {/* aria-live : un lecteur d'écran annonce le changement de page */}
+            <span className="pagination-position" aria-live="polite">
+              {t('pagination.position', { page: pageAffichee + 1, total: nbPages })}
+            </span>
+            <button
+              className="btn btn-fantome"
+              onClick={() => setPage(pageAffichee + 1)}
+              disabled={pageAffichee === nbPages - 1}
+            >
+              {t('pagination.suivant')} ›
+            </button>
+          </nav>
         )}
       </section>
 
