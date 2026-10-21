@@ -1,16 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-// Polices auto-hébergées (fonctionnent hors-ligne) : Inter (UI) + JetBrains Mono (SQL).
-import '@fontsource/inter/400.css'
-import '@fontsource/inter/500.css'
-import '@fontsource/inter/600.css'
-import '@fontsource/jetbrains-mono/400.css'
-import '@fontsource/jetbrains-mono/500.css'
+// Polices chargées via Google Fonts dans index.html (Fraunces, IBM Plex Sans/Mono).
 import './index.css'
 import App from './App.jsx'
+import FournisseurLangue from './i18n/FournisseurLangue'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <FournisseurLangue>
+      <App />
+    </FournisseurLangue>
   </StrictMode>,
 )
