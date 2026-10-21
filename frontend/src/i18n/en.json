@@ -61,5 +61,20 @@
   "regles.SF005.label": "Redundant columns",
   "regles.SF005.message": "Columns {colonnes} of table “{table}” form a redundant numbered group; consider a dedicated table.",
   "regles.SF006.label": "No constraint",
-  "regles.SF006.message": "Table “{table}” has no constraint (neither primary key nor foreign key)."
+  "regles.SF006.message": "Table “{table}” has no constraint (neither primary key nor foreign key).",
+
+  "onglet.choix": "Screen",
+  "onglet.analyser": "Analyze",
+  "onglet.generer": "Generate",
+
+  "generer.titre": "Description",
+  "generer.btn": "Generate schema",
+  "generer.enCours": "Generating…",
+  "generer.placeholder": "Describe your business domain in a few sentences…",
+  "generer.exemple": "A library: books (title, ISBN), authors, members, and loans with a return date.",
+  "generer.modele": "Relational model",
+  "generer.tables": { "one": "{n} table", "other": "{n} tables" },
+  "generer.ddl": "PostgreSQL DDL",
+  "generer.telecharger": "Download .sql",
+  "generer.vide": "Describe your domain on the left: the model designed by the LLM and the PostgreSQL DDL will appear here."
 }

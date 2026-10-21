@@ -10,6 +10,7 @@ import { IconeSeverite, Logotype, IllustrationValide, IconeCorbeille, IconeEtinc
 import { illuminer, surbrillance } from './surbrillance'
 import { useLangue, LANGUES } from './i18n'
 import Diagramme from './Diagramme'
+import Generer from './Generer'
 import Fond from './Fond'
 import './App.css'
 
@@ -39,7 +40,7 @@ const MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator
 
 // Éléments porteurs de texte traduit : ils seuls font un fondu quand la
 // langue change (l'éditeur et le diagramme, eux, ne changent pas).
-const TEXTES_TRADUITS = '.marque-tag, .nav-lien, .planche-tete, .etat-texte, .etat-valide, .banniere-erreur, .filtres, .groupe'
+const TEXTES_TRADUITS = '.marque-tag, .nav-lien, .onglet, .planche-tete, .etat-texte, .etat-valide, .banniere-erreur, .filtres, .groupe'
 
 // Erreur affichable : une clé de traduction (+ paramètres), ou un texte brut
 // venu du backend (ex. « DDL invalide : … »), qu'on ne sait pas traduire.
@@ -80,6 +81,9 @@ function App() {
   // Survol partagé entre la liste, l'éditeur et le diagramme :
   // { issue } quand on survole un problème, { table } quand on survole une table du diagramme.
   const [survol, setSurvol] = useState(null)
+  // Écran affiché : 'analyser' (DDL -> problèmes) ou 'generer' (texte -> DDL).
+  // Un simple état suffit : deux écrans ne justifient pas un routeur.
+  const [onglet, setOnglet] = useState('analyser')
 
   // Changement de langue : seuls les textes changent, avec un fondu de 150 ms.
   // Web Animations API (element.animate) plutôt qu'une classe CSS : rejouer une
@@ -177,9 +181,11 @@ function App() {
   // Ctrl+Entrée (⌘+Entrée sur Mac) lance l'analyse, où que soit le focus.
   // Écoute en phase de CAPTURE : on intercepte la touche avant CodeMirror,
   // dont le raccourci par défaut Mod-Enter insère une ligne vide.
+  // Ctrl+Entrée ne lance l'analyse que sur l'onglet Analyser (sur Générer,
+  // l'écran d'analyse est caché : rien ne doit s'y déclencher en douce).
   const analyserRef = useRef(analyser)
   useEffect(() => {
-    analyserRef.current = analyser // toujours la version à jour (état courant)
+    analyserRef.current = onglet === 'analyser' ? analyser : () => {} // toujours la version à jour
   })
   useEffect(() => {
     const surTouche = (e) => {
@@ -250,6 +256,14 @@ function App() {
           <Logotype />
           <span className="marque-tag">{t('entete.tag')}</span>
         </div>
+        {/* Onglets : même pilule segmentée que le choix de langue */}
+        <div className="onglets" role="group" aria-label={t('onglet.choix')}>
+          {['analyser', 'generer'].map((o) => (
+            <button key={o} className="onglet" aria-pressed={onglet === o} onClick={() => setOnglet(o)}>
+              {t(`onglet.${o}`)}
+            </button>
+          ))}
+        </div>
         <nav className="nav">
           <a className="nav-lien" href={`${API}/docs`} target="_blank" rel="noreferrer">{t('entete.docApi')}</a>
           {/* Sélecteur segmenté : deux boutons à bascule (aria-pressed) */}
@@ -269,7 +283,10 @@ function App() {
         </nav>
       </header>
 
-      <main className="grille">
+      {/* Les deux écrans restent montés ; hidden masque l'inactif. Pourquoi :
+          démonter l'analyse ferait perdre l'éditeur et ses soulignements,
+          démonter la génération ferait perdre le DDL généré (un appel LLM). */}
+      <main className="grille" hidden={onglet !== 'analyser'}>
         <div className="colonne colonne-principale">
           <section className="planche" aria-labelledby="titre-schema">
             <div className="planche-tete">
@@ -337,6 +354,7 @@ function App() {
           </section>
         </aside>
       </main>
+      <Generer api={API} hidden={onglet !== 'generer'} />
     </div>
     </>
   )

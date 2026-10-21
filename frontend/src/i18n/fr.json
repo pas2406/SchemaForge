@@ -61,5 +61,20 @@
   "regles.SF005.label": "Colonnes redondantes",
   "regles.SF005.message": "Les colonnes {colonnes} de la table « {table} » forment un groupe numéroté redondant ; envisagez une table dédiée.",
   "regles.SF006.label": "Aucune contrainte",
-  "regles.SF006.message": "La table « {table} » n’a aucune contrainte (ni clé primaire, ni clé étrangère)."
+  "regles.SF006.message": "La table « {table} » n’a aucune contrainte (ni clé primaire, ni clé étrangère).",
+
+  "onglet.choix": "Écran",
+  "onglet.analyser": "Analyser",
+  "onglet.generer": "Générer",
+
+  "generer.titre": "Description",
+  "generer.btn": "Générer le schéma",
+  "generer.enCours": "Génération…",
+  "generer.placeholder": "Décris ton domaine métier en quelques phrases…",
+  "generer.exemple": "Une bibliothèque : des livres (titre, ISBN), des auteurs, des adhérents, et des emprunts avec date de retour.",
+  "generer.modele": "Modèle relationnel",
+  "generer.tables": { "one": "{n} table", "other": "{n} tables" },
+  "generer.ddl": "DDL PostgreSQL",
+  "generer.telecharger": "Télécharger le .sql",
+  "generer.vide": "Décris ton domaine à gauche : le modèle conçu par le LLM et le DDL PostgreSQL apparaîtront ici."
 }
