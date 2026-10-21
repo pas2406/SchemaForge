@@ -83,5 +83,14 @@
   "historique.compte": { "one": "{n} analysis", "other": "{n} analyses" },
   "historique.chargement": "Loading history…",
   "historique.vide": "No analysis recorded yet.",
-  "historique.sansProbleme": "no issues"
+  "historique.sansProbleme": "no issues",
+  "historique.vider": "Clear",
+  "historique.supprimer": "Delete this analysis",
+  "historique.confirmerTitre": "Clear history?",
+  "historique.confirmerVider": { "one": "{n} analysis and its issues will be permanently deleted. This cannot be undone.", "other": "All {n} analyses and their issues will be permanently deleted. This cannot be undone." },
+  "historique.confirmerBtn": "Delete all",
+  "historique.confirmerUneTitre": "Delete this analysis?",
+  "historique.confirmerUne": "The analysis from {date} and its issues will be permanently deleted.",
+  "historique.confirmerUneBtn": "Delete",
+  "btn.annuler": "Cancel"
 }

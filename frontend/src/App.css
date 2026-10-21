@@ -1172,6 +1172,44 @@ del.diff-ligne .diff-marge {
 .historique-entree:hover {
   background: var(--panel-hover);
 }
+/* Ligne = bouton « rouvrir » + corbeille côte à côte */
+.historique-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+}
+.historique-suppr {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: color var(--t-fast) ease, opacity var(--t-fast) ease, background-color var(--t-fast) ease;
+}
+/* Discrète au repos, nette au survol de la ligne ou au focus clavier */
+.historique-ligne:hover .historique-suppr,
+.historique-suppr:focus-visible {
+  opacity: 1;
+}
+.historique-suppr:hover {
+  color: var(--error-text);
+  background: var(--error-tint);
+}
+.historique-suppr .icone {
+  width: 14px;
+  height: 14px;
+}
+.historique-suppr:disabled,
+.btn-effacer:disabled {
+  cursor: wait;
+  opacity: 0.4;
+}
 .historique-date {
   color: var(--text-muted);
   font-size: var(--fs-sm);
@@ -1194,6 +1232,71 @@ del.diff-ligne .diff-marge {
   .historique-date {
     grid-column: 1 / -1;
   }
+}
+
+/* ================= Fenêtre de confirmation (<dialog>) ================= */
+.confirmation {
+  width: min(440px, calc(100vw - 2 * var(--s4)));
+  padding: 0;
+  border: var(--trait) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+}
+.confirmation[open] {
+  animation: confirmation-entree 200ms var(--ease);
+}
+/* Fond assombri et légèrement flouté derrière la fenêtre (fourni par showModal) */
+.confirmation::backdrop {
+  background: rgba(3, 10, 20, 0.6);
+  backdrop-filter: blur(3px);
+}
+.confirmation[open]::backdrop {
+  animation: fondu 200ms ease;
+}
+.confirmation-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s5);
+}
+.confirmation-titre {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+.confirmation-message {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+@keyframes confirmation-entree {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+/* Bouton destructeur : rouge franc (le vermillon du thème tire sur l'orange),
+   réservé aux suppressions définitives. #d93036 : texte blanc à 4,7:1, au-dessus
+   du minimum d'accessibilité (WCAG AA, 4,5:1) ; plus foncé au survol. */
+.btn-danger {
+  background: #d93036;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: var(--reflet), var(--relief);
+}
+.btn-danger:hover {
+  background: #c62a2f;
+  box-shadow: var(--reflet), 0 8px 24px -6px rgba(217, 48, 54, 0.45);
 }
 
 /* Zone de texte libre (formulaire de génération) */
@@ -1220,7 +1323,8 @@ del.diff-ligne .diff-marge {
   .tampon,
   .fix,
   .banniere-erreur,
-  .etat-valide {
+  .etat-valide,
+  .confirmation[open] {
     animation: fondu 200ms ease backwards !important;
     animation-delay: 0ms !important;
   }

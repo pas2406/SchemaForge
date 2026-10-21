@@ -83,5 +83,14 @@
   "historique.compte": { "one": "{n} analyse", "other": "{n} analyses" },
   "historique.chargement": "Chargement de l’historique…",
   "historique.vide": "Aucune analyse enregistrée pour l’instant.",
-  "historique.sansProbleme": "aucun problème"
+  "historique.sansProbleme": "aucun problème",
+  "historique.vider": "Vider",
+  "historique.supprimer": "Supprimer cette analyse",
+  "historique.confirmerTitre": "Vider l’historique ?",
+  "historique.confirmerVider": { "one": "{n} analyse et ses problèmes seront supprimés définitivement. Cette action est irréversible.", "other": "Les {n} analyses et leurs problèmes seront supprimés définitivement. Cette action est irréversible." },
+  "historique.confirmerBtn": "Tout supprimer",
+  "historique.confirmerUneTitre": "Supprimer cette analyse ?",
+  "historique.confirmerUne": "L’analyse du {date} et ses problèmes seront supprimés définitivement.",
+  "historique.confirmerUneBtn": "Supprimer",
+  "btn.annuler": "Annuler"
 }
