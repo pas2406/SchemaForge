@@ -1,98 +1,150 @@
+/* =========================================================================
+   Tokens de design : TOUTES les couleurs, polices, espacements et durées.
+   Un seul thème, « cyanotype » : bleus nuit, trait craie, annotations
+   vermillon (erreurs), ambre (avertissements), cyan (infos, liens).
+   Contrastes vérifiés AA (≥ 4.5:1) pour chaque texte sur chaque fond.
+   ========================================================================= */
 :root {
-  /* Fonds */
-  --bg: #0b0d12;
-  --surface-1: #12161d;
-  --surface-2: #171c24;
-  --surface-3: #1c222c;
+  /* --- Palette --- */
+  --bg: #0b1e33;            /* fond de page */
+  --panel: #10294a;         /* panneaux */
+  --panel-hover: #163659;   /* survols, carte de correction */
+  --code-bg: #0d2340;       /* éditeur, boîtes du diagramme, blocs de code */
+  --line: #2a4e78;          /* filets et bordures */
+  --text: #ede6d6;          /* blanc craie */
+  --text-muted: #9fb4cc;
+  --cyan: #6fd3e8;
+  --amber: #f2b33d;
+  --vermillion: #ff6b4a;
+  --green: #7bd88f;
 
-  /* Texte */
-  --text: #e7ecf3;
-  --text-dim: #8b97a8;
-  --text-faint: #5b6675;
+  /* Le vermillon #ff6b4a sert aux FORMES (carrés, filets, soulignements :
+     3:1 suffit). En TEXTE, il tombe à 4.37:1 sur --panel-hover ; on prend
+     donc une nuance un peu plus claire, à 5.1:1. */
+  --vermillion-text: #ff8466;
 
-  /* Bordures / lignes fines */
-  --border: #232a35;
-  --border-strong: #2e3742;
+  /* Rôles sémantiques (les composants n'utilisent que ceux-ci) */
+  --error: var(--vermillion);
+  --error-text: var(--vermillion-text);
+  --warning: var(--amber);
+  --info: var(--cyan);
+  --link: var(--cyan);
+  --success: var(--green);
+  --on-accent: var(--bg);   /* texte sur fond ambre ou vert plein */
+  --focus: var(--cyan);
 
-  /* Couleurs fonctionnelles (parcimonie) */
-  --primary: #27e0b3;   /* turquoise : actions, focus */
-  --primary-dim: #1b9d7f;
-  --accent: #5b8cff;    /* bleu électrique : secondaire */
-  --error: #ff6b6b;
-  --warning: #f0a35e;
-  --info: #5b8cff;
+  /* Teintes à 15 % (compteurs de sévérité, lignes de diff) */
+  --error-tint: color-mix(in srgb, var(--vermillion) 15%, transparent);
+  --warning-tint: color-mix(in srgb, var(--amber) 15%, transparent);
+  --info-tint: color-mix(in srgb, var(--cyan) 15%, transparent);
+  --success-tint: color-mix(in srgb, var(--green) 15%, transparent);
 
-  --header-bg: rgba(11, 13, 18, 0.85);
-  --halo: rgba(39, 224, 179, 0.05);
+  /* Coloration syntaxique SQL (vérifiée AA sur --code-bg) */
+  --syn-keyword: var(--cyan);
+  --syn-type: #d4a65a;      /* ambre atténué */
+  --syn-ident: var(--text);
+  --syn-string: var(--green);
+  --syn-number: #e8c787;
+  --syn-punct: var(--text-muted);
+  --syn-comment: #8ea4bf;
 
-  --sans: "Inter", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  /* Fond : grille, grain, éclairage */
+  --grid-minor: rgba(111, 211, 232, 0.035);
+  --grid-major: rgba(111, 211, 232, 0.07);
+  --grain-opacity: 0.05;
+  --glow-top: rgba(111, 211, 232, 0.09);    /* dégradé radial doux, en haut */
+  --glow-edge: rgba(3, 10, 20, 0.45);       /* bords plus sombres */
+  --reticle: rgba(111, 211, 232, 0.3);
 
-  --radius: 8px;
-  --radius-sm: 6px;
+  --selection: rgba(111, 211, 232, 0.22);
+  --line-active: rgba(237, 230, 214, 0.04);
+  --line-glow: rgba(111, 211, 232, 0.13);   /* ligne illuminée au survol d'un problème */
+  --scan: rgba(111, 211, 232, 0.8);         /* ligne de balayage pendant l'analyse */
+  --shadow: 0 1px 0 rgba(237, 230, 214, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+
+  /* Typographie */
+  --serif: "Fraunces", "Source Serif 4", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-code: 13.5px;        /* éditeur ET diagramme */
+  --fs-md: 15px;
+  --fs-lg: 20px;
+  --fs-xl: 26px;
+
+  /* Espacements (échelle de 4 px) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  /* Trait et géométrie */
+  --trait: 1px;
+  --radius-btn: 6px;
+  --radius: 10px;
+  --grid-step: 8px;
+  --grid-major-step: 40px;
+
+  /* Mouvement */
+  --t-fast: 160ms;          /* survols, focus */
+  --t-lang: 150ms;          /* fondu au changement de langue */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --cascade: 70ms;          /* décalage entre deux problèmes */
 
   color-scheme: dark;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: var(--fs-md);
+  line-height: 1.5;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Thème clair (activé via data-theme="light" sur <html>) */
-:root[data-theme="light"] {
-  --bg: #f6f7f9;
-  --surface-1: #ffffff;
-  --surface-2: #f1f3f5;
-  --surface-3: #e8ecf0;
-
-  --text: #1a1f27;
-  --text-dim: #566173;
-  --text-faint: #8b97a8;
-
-  --border: #e4e8ec;
-  --border-strong: #d0d7de;
-
-  --primary: #12b890;
-  --primary-dim: #0e9576;
-  --accent: #3b6fe0;
-  --error: #e5484d;
-  --warning: #c6791f;
-  --info: #3b6fe0;
-
-  --header-bg: rgba(255, 255, 255, 0.85);
-  --halo: rgba(18, 184, 144, 0.06);
-
-  color-scheme: light;
-}
-
 * {
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   min-height: 100vh;
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  overflow-x: hidden;
 }
 
-h1, h2, h3, p {
+h1,
+h2,
+h3,
+p {
   margin: 0;
 }
 
-button {
+button,
+input,
+textarea {
   font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Focus clavier : anneau cyan de 2 px, décalé, sur tout élément focalisable */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 ::selection {
-  background: rgba(39, 224, 179, 0.25);
+  background: var(--selection);
 }
 
-/* Barre de défilement discrète */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
