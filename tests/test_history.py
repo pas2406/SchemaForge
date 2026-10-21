@@ -81,3 +81,19 @@ def test_vider_historique_ne_laisse_aucun_orphelin(session):
     assert vider_historique(session) == 2
     assert lister_analyses(session) == []
     assert _nb_problemes(session) == 0
+
+
+def test_enregistrer_analyse_ne_garde_que_les_plus_recentes(session):
+    pb = [Issue(rule="pk_manquante", table="t", message="pas de PK")]
+    for nom in ("a", "b", "c", "d", "e"):
+        enregistrer_analyse(session, f"CREATE TABLE {nom} (x INT);", pb, max_analyses=3)
+
+    # Les 2 plus anciennes (a, b) ont été purgées, avec leurs problèmes.
+    assert [a.ddl[13] for a in lister_analyses(session)] == ["e", "d", "c"]
+    assert _nb_problemes(session) == 3
+
+
+def test_retention_par_defaut_est_de_100():
+    from app.database import MAX_ANALYSES
+
+    assert MAX_ANALYSES == 100

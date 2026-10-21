@@ -24,6 +24,10 @@ engine = create_engine(settings.database_url)
 # Fabrique de sessions : chaque session est une "conversation" avec la base.
 SessionLocal = sessionmaker(bind=engine)
 
+# Rétention : on ne garde que les N analyses les plus récentes, pour que la
+# table reste bornée (chaque clic « Analyser » ajoute une ligne).
+MAX_ANALYSES = 100
+
 
 class Base(DeclarativeBase):
     """Classe parente de tous les modèles ORM."""
@@ -70,8 +74,9 @@ def enregistrer_analyse(
     session: Session,
     ddl: str,
     issues: list[Issue],
+    max_analyses: int = MAX_ANALYSES,
 ) -> AnalyseDB:
-    """Sauvegarde une analyse et ses problèmes détectés, puis la renvoie."""
+    """Sauvegarde une analyse et ses problèmes, purge les plus anciennes, puis la renvoie."""
     analyse = AnalyseDB(
         ddl=ddl,
         problemes=[
@@ -79,9 +84,26 @@ def enregistrer_analyse(
         ],
     )
     session.add(analyse)   # place l'objet dans la "conversation"
-    session.commit()       # écrit réellement en base
+    session.flush()        # envoie l'INSERT sans valider : la purge la voit
+    _purger_anciennes(session, max_analyses)
+    session.commit()       # valide insertion + purge ensemble (tout ou rien)
     session.refresh(analyse)  # recharge l'objet (id, created_at remplis par la base)
     return analyse
+
+
+def _purger_anciennes(session: Session, max_analyses: int) -> None:
+    """Supprime les analyses au-delà des max_analyses plus récentes (sans commit)."""
+    # Même tri que lister_analyses ; OFFSET saute les N à garder : il reste
+    # exactement les ids à supprimer.
+    en_trop = session.scalars(
+        select(AnalyseDB.id)
+        .order_by(AnalyseDB.created_at.desc(), AnalyseDB.id.desc())
+        .offset(max_analyses)
+    ).all()
+    if en_trop:
+        # Problèmes d'abord, puis analyses (même raison que vider_historique).
+        session.execute(delete(ProblemeDB).where(ProblemeDB.analyse_id.in_(en_trop)))
+        session.execute(delete(AnalyseDB).where(AnalyseDB.id.in_(en_trop)))
 
 
 def lister_analyses(session: Session, limite: int | None = None) -> list[AnalyseDB]:
