@@ -1,7 +1,7 @@
 """Tests de la génération de suggestions (app/suggestions.py), avec un faux LLM."""
 
 from app.rules import Issue
-from app.suggestions import Suggestion, generer_suggestion
+from app.suggestions import Suggestion, construire_prompt, generer_suggestion
 
 
 def faux_llm(prompt: str) -> str:
@@ -41,3 +41,13 @@ def test_generer_suggestion_transmet_un_prompt_au_llm():
 
     assert len(prompts_recus) == 1
     assert "logs" in prompts_recus[0]  # le prompt parle bien de la table concernée
+
+
+def test_prompt_demande_la_langue_choisie():
+    # Le front laisse choisir FR / EN : la consigne de langue doit suivre.
+    issue = Issue(rule="pk_manquante", table="logs", message="pas de PK")
+    ddl = "CREATE TABLE logs (message TEXT);"
+
+    assert "in English" in construire_prompt(issue, ddl, "en")
+    assert "en français" in construire_prompt(issue, ddl, "fr")
+    assert "en français" in construire_prompt(issue, ddl)  # défaut : français

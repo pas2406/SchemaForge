@@ -157,6 +157,12 @@ def test_suggest_issue_retourne_une_correction():
         app.dependency_overrides.pop(fournir_llm, None)
 
 
+def test_suggest_issue_rejette_une_langue_inconnue():
+    # Seules "fr" et "en" sont acceptées (Literal) : le reste -> 422, sans appel LLM.
+    corps = {"ddl": "CREATE TABLE t (a INT);", "rule": "pk_manquante", "table": "t", "message": "x"}
+    assert client.post("/suggest-issue", json={**corps, "lang": "de"}).status_code == 422
+
+
 def test_suggest_schema_sain_ne_renvoie_rien():
     # Aucun problème -> aucune suggestion, et le LLM n'est jamais appelé.
     app.dependency_overrides[fournir_llm] = lambda: faux_llm

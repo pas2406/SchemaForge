@@ -14,7 +14,7 @@ from app.generation import SchemaSpec, generer_modele, rendre_ddl
 from app.llm import appeler_groq
 from app.parsing import DDLInvalide
 from app.rules import Issue, analyser
-from app.suggestions import Suggestion, generer_suggestion
+from app.suggestions import Langue, Suggestion, generer_suggestion
 
 # Instance aiguillant les requêtes ; uvicorn la démarre via "app.main:app".
 app = FastAPI(title="SchemaForge API")
@@ -45,6 +45,8 @@ class SuggestIssueRequest(BaseModel):
     rule: str
     table: str
     message: str
+    # Langue des textes rédigés par le LLM ; Literal -> toute autre valeur donne un 422.
+    lang: Langue = "fr"
 
 
 class GenerateRequest(BaseModel):
@@ -113,7 +115,7 @@ def suggest_issue(
 ) -> Suggestion:
     # Correction à la demande pour UN seul problème (le front appelle par issue).
     issue = Issue(rule=request.rule, table=request.table, message=request.message)
-    return generer_suggestion(issue, request.ddl, appeler_llm)
+    return generer_suggestion(issue, request.ddl, appeler_llm, request.lang)
 
 
 @app.post("/generate")
